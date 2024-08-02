@@ -46,10 +46,12 @@ struct Promise {
     }
 
     std::coroutine_handle<Promise> get_return_object() {
+        auto a = std::coroutine_handle<Promise>::from_promise(*this);
         return std::coroutine_handle<Promise>::from_promise(*this);
     }
 
     int mRetValue;
+
 };
 
 struct Task {
@@ -59,9 +61,42 @@ struct Task {
         : mCoroutine(coroutine) {}
 
     std::coroutine_handle<promise_type> mCoroutine;
+
+    
 };
 
-Task hello() {
+struct WorldTask{
+    using promise_type = Promise;
+
+    WorldTask(std::coroutine_handle<promise_type> coroutine)
+        : mCoroutine(coroutine) {}
+
+    std::coroutine_handle<promise_type> mCoroutine;
+
+    bool await_ready() const noexcept { return false; }
+
+    std::coroutine_handle<> await_suspend(std::coroutine_handle<> coroutine) const noexcept {
+        if (coroutine.done())
+            return std::noop_coroutine();
+        else
+            return mCoroutine;
+    }
+
+    void await_resume() const noexcept {}
+
+    
+};
+
+WorldTask world(){
+    debug(), "world";
+    co_return;
+}
+
+Task hello() { // 调度器
+    debug(), "hello 正在构建worldTask";
+    WorldTask worldTask = world();
+    debug(), "hello 构建完了worldTask";
+    co_await worldTask;
     debug(), "hello 42";
     co_yield 42;
     debug(), "hello 12";
