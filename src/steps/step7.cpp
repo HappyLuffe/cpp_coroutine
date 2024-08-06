@@ -36,7 +36,7 @@ template <class T> struct Uninitialized {
     }
 
     template <class... Ts> void putValue(Ts &&...args) {
-        new (std::addressof(mValue)) T(std::forward<Ts>(args)...);
+        new (std::addressof(mValue)) T(std::forward<Ts>(args)...); // 定位 new 运算符，用于在指定位置构建新的对象而不是在heap上划一块新的内存
     }
 };
 
@@ -84,21 +84,7 @@ constexpr std::coroutine_handle<To> staticHandleCast(std::coroutine_handle<P> co
     return std::coroutine_handle<To>::from_address(coroutine.address());
 }
 
-// struct RepeatAwaiter {
-//     bool await_ready() const noexcept {
-//         return false;
-//     }
 
-//     std::coroutine_handle<>
-//     await_suspend(std::coroutine_handle<> coroutine) const noexcept {
-//         if (coroutine.done())
-//             return std::noop_coroutine();
-//         else
-//             return coroutine;
-//     }
-
-//     void await_resume() const noexcept {}
-// };
 
 struct PreviousAwaiter {
     std::coroutine_handle<> mPrevious;
